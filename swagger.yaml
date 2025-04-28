@@ -1,0 +1,201 @@
+openapi: 3.0.0
+info:
+  title: Administrador usuarios
+  description: Microservicio que administra los usuarios del proyecto de videojuegos permitiendo operaciones de creación de usuarios, asociación a rol, y consulta de estos. Este proceso se realiza mediante autenticación oAuth
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+    description: Local server
+paths:
+  /v1/operaciones/entretenimiento/gestion/videojuegos/usuario:
+    post:
+      summary: Crear un nuevo usuario en la plataforma de videojuegos
+      description: Crear un nuevo usuario en el sistema.
+      operationId: createUser
+      security:
+        - oauth2:
+            - write:users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+      responses:
+        201:
+          description: Usuario creado de manera exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        400:
+          description: Error en los datos enviados
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        401:
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/operaciones/entretenimiento/gestion/videojuegos/usuarios/roles:
+    post:
+      summary: Asignar rol a usuario previamente creado en la plataforma de videojuegos
+      description: Asignar rol a usuario existente.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                usuario_id:
+                  type: integer
+                  example: 1
+                rol_id:
+                  type: integer
+                  example: 2
+              required:
+                - usuario_id
+                - rol_id
+      responses:
+        201:
+          description: Rol asignado exitosamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  usuario_id:
+                    type: integer
+                    example: 1
+                  rol_id:
+                    type: integer
+                    example: 2
+                  fecha_creacion:
+                    type: string
+                    format: date-time
+                    example: 2025-04-28T12:00:00Z
+                  fecha_ultima_actualizacion:
+                    type: string
+                    format: date-time
+                    example: 2025-04-28T12:00:00Z
+        400:
+          description: Campo inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/operaciones/entretenimiento/gestion/videojuegos/usuarios:
+    get:
+      summary: Consultar información de un usuario junto con su rol
+      description: Obtener la información de un rol asociado a un usuario.
+      parameters:
+        - in: query
+          name: usuario_id
+          required: true
+          schema:
+            type: integer
+          description: ID del usuario
+      responses:
+        200:
+          description: Listado de roles para el usuario
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 1
+                  nombre:
+                    type: string
+                    example: Juan Campo
+                  roles:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        rol_id:
+                          type: integer
+                          example: 2
+                        nombre:
+                          type: string
+                          example: Administrator
+        404:
+          description: Usuario no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    UserRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          example: Juan Campo
+        correo:
+          type: string
+          format: email
+          example: juan.campo@gmail.com
+        contraseña:
+          type: string
+          example: password123
+      required:
+        - nombre
+        - correo
+        - contraseña
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        nombre:
+          type: string
+          example: Juan Campo
+        correo:
+          type: string
+          example: juan.campo@gmail.com
+        fecha_registro:
+          type: string
+          format: date-time
+          example: 2025-04-28T12:00:00Z
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Campo inválido
+  securitySchemes:
+    oauth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://example.com/oauth/authorize
+          tokenUrl: https://example.com/oauth/token
+          scopes:
+            write:users: Crear y modificar usuarios
+            read:users: Leer información de usuarios
